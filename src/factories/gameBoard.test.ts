@@ -1,3 +1,4 @@
+import { create } from 'domain';
 import { createGameBoard } from './gameBoard';
 import { createShip } from './ship';
 
@@ -61,7 +62,8 @@ describe('createGameBoard', () => {
 
   test('placeShip will place ships on the edge of the bord', () => {
     const destroyer = createShip(2);
-    const gameBoard = createGameBoard(3, 5);
+    const newBoard = () => createGameBoard(3, 5);
+    let gameBoard = newBoard();
 
     // pointing right
     expect(() => {
@@ -70,12 +72,14 @@ describe('createGameBoard', () => {
     expect(() => {
       gameBoard.placeShip(destroyer, 0, 4, 'right');
     }).not.toThrow();
+    gameBoard = newBoard(); // Avoid ship collision
     expect(() => {
       gameBoard.placeShip(destroyer, 1, 0, 'right');
     }).not.toThrow();
     expect(() => {
       gameBoard.placeShip(destroyer, 1, 4, 'right');
     }).not.toThrow();
+    gameBoard = newBoard(); // Avoid ship collision
 
     // pointing down
     expect(() => {
@@ -90,5 +94,57 @@ describe('createGameBoard', () => {
     expect(() => {
       gameBoard.placeShip(destroyer, 2, 3, 'down');
     }).not.toThrow();
+  });
+
+  test("placeShip won't place overlapping ships", () => {
+    const destroyer = createShip(2);
+    const carrier = createShip(5);
+    const gameBoard = createGameBoard(10, 10);
+
+    gameBoard.placeShip(destroyer, 4, 4, 'right');
+    expect(() => gameBoard.placeShip(carrier, 4, 4, 'right')).toThrow(
+      'Placed ship collides with already-existing ship.'
+    );
+    expect(() => gameBoard.placeShip(carrier, 0, 4, 'right')).toThrow(
+      'Placed ship collides with already-existing ship.'
+    );
+    expect(() => gameBoard.placeShip(carrier, 5, 4, 'right')).toThrow(
+      'Placed ship collides with already-existing ship.'
+    );
+    expect(() => gameBoard.placeShip(carrier, 4, 0, 'down')).toThrow(
+      'Placed ship collides with already-existing ship.'
+    );
+    expect(() => gameBoard.placeShip(carrier, 5, 0, 'down')).toThrow(
+      'Placed ship collides with already-existing ship.'
+    );
+    expect(() => gameBoard.placeShip(carrier, 5, 3, 'down')).toThrow(
+      'Placed ship collides with already-existing ship.'
+    );
+  });
+
+  test('placeShip will place ships side-by-side', () => {
+    const destroyer = createShip(2);
+    let gameBoard = createGameBoard(6, 3);
+
+    expect(() => gameBoard.placeShip(destroyer, 0, 0, 'right')).not.toThrow();
+    expect(() => gameBoard.placeShip(destroyer, 0, 1, 'right')).not.toThrow();
+    expect(() => gameBoard.placeShip(destroyer, 0, 2, 'right')).not.toThrow();
+    expect(() => gameBoard.placeShip(destroyer, 2, 0, 'right')).not.toThrow();
+    expect(() => gameBoard.placeShip(destroyer, 2, 1, 'right')).not.toThrow();
+    expect(() => gameBoard.placeShip(destroyer, 2, 2, 'right')).not.toThrow();
+    expect(() => gameBoard.placeShip(destroyer, 4, 0, 'right')).not.toThrow();
+    expect(() => gameBoard.placeShip(destroyer, 4, 1, 'right')).not.toThrow();
+    expect(() => gameBoard.placeShip(destroyer, 4, 2, 'right')).not.toThrow();
+
+    gameBoard = createGameBoard(3, 6);
+    expect(() => gameBoard.placeShip(destroyer, 0, 0, 'down')).not.toThrow();
+    expect(() => gameBoard.placeShip(destroyer, 0, 2, 'down')).not.toThrow();
+    expect(() => gameBoard.placeShip(destroyer, 0, 4, 'down')).not.toThrow();
+    expect(() => gameBoard.placeShip(destroyer, 1, 0, 'down')).not.toThrow();
+    expect(() => gameBoard.placeShip(destroyer, 1, 2, 'down')).not.toThrow();
+    expect(() => gameBoard.placeShip(destroyer, 1, 4, 'down')).not.toThrow();
+    expect(() => gameBoard.placeShip(destroyer, 2, 0, 'down')).not.toThrow();
+    expect(() => gameBoard.placeShip(destroyer, 2, 2, 'down')).not.toThrow();
+    expect(() => gameBoard.placeShip(destroyer, 2, 4, 'down')).not.toThrow();
   });
 });

@@ -21,10 +21,35 @@ const createGameBoard = function (width: number, height: number) {
   };
 
   /**
+   * Get a list of cells occupied by the ship at the given ShipLocation
+   */
+  const shipCells = function (shipLocation: ShipLocation): {
+    x: number;
+    y: number;
+  }[] {
+    const { ship, coords, direction } = shipLocation;
+    const { x, y } = coords;
+
+    if (direction === 'right') {
+      const cells = [];
+      for (let i = 0; i < ship.length; i++) {
+        cells.push({ x: x + i, y });
+      }
+      return cells;
+    } else {
+      const cells = [];
+      for (let i = 0; i < ship.length; i++) {
+        cells.push({ x, y: y + i });
+      }
+      return cells;
+    }
+  };
+
+  /**
    * Determines if given ship location is in-bounds.
    * If axis is given, determines only on that axis
    */
-  const shipInBounds = function (shipLocation: ShipLocation, axis?: Axis) {
+  const isShipInBounds = function (shipLocation: ShipLocation, axis?: Axis) {
     const { ship, coords, direction } = shipLocation;
     const { x, y } = coords;
 
@@ -64,6 +89,20 @@ const createGameBoard = function (width: number, height: number) {
   };
 
   /**
+   * Determines if the ships at the given ship locations collide on any occupied cell.
+   */
+  const isShipCollision = function (shipA: ShipLocation, shipB: ShipLocation) {
+    const shipACells = shipCells(shipA);
+    const shipBCells = shipCells(shipB);
+    return shipACells.some((shipACell) =>
+      shipBCells.some(
+        (shipBCell) =>
+          shipACell.x === shipBCell.x && shipACell.y === shipBCell.y
+      )
+    );
+  };
+
+  /**
    * Places a ship at the given coordinates, facing the given direction
    * @param x X coord
    * @param y Y coord
@@ -81,17 +120,32 @@ const createGameBoard = function (width: number, height: number) {
     const outOfBoundsErrorMessage = (axis: string) =>
       `Placed ship would be out of bounds on the ${axis}-axis.`;
 
-    if (!shipInBounds(shipLocation, 'horizontal')) {
+    if (!isShipInBounds(shipLocation, 'horizontal')) {
       throw new Error(outOfBoundsErrorMessage('x'));
     }
-    if (!shipInBounds(shipLocation, 'vertical')) {
+    if (!isShipInBounds(shipLocation, 'vertical')) {
       throw new Error(outOfBoundsErrorMessage('y'));
+    }
+
+    // Collision error checking
+    if (
+      ships.some((existingShipLocation) =>
+        isShipCollision(shipLocation, existingShipLocation)
+      )
+    ) {
+      throw new Error('Placed ship collides with already-existing ship.');
     }
 
     ships.push(shipLocation);
   };
 
-  return { dimensions: { width, height }, height, ships, placeShip };
+  return {
+    dimensions: { width, height },
+    height,
+    ships,
+    placeShip,
+    isShipCollision,
+  };
 };
 
 export { createGameBoard };
