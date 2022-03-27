@@ -1,4 +1,3 @@
-import { create } from 'domain';
 import { createGameBoard } from './gameBoard';
 import { createShip } from './ship';
 
