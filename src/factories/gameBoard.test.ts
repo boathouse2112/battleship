@@ -9,9 +9,9 @@ describe('createGameBoard', () => {
 
   test('placeShip adds a ship', () => {
     const destroyer = createShip(2);
-    const gameBoard = createGameBoard(10, 10);
+    let gameBoard = createGameBoard(10, 10);
 
-    gameBoard.placeShip(destroyer, 4, 5, 'right');
+    gameBoard = gameBoard.placeShip(destroyer, 4, 5, 'right');
 
     expect(gameBoard.shipLocations[0].ship).toBe(destroyer);
     expect(gameBoard.shipLocations[0].coords).toStrictEqual({ x: 4, y: 5 });
@@ -98,9 +98,9 @@ describe('createGameBoard', () => {
   test("placeShip won't place overlapping ships", () => {
     const destroyer = createShip(2);
     const carrier = createShip(5);
-    const gameBoard = createGameBoard(10, 10);
+    let gameBoard = createGameBoard(10, 10);
 
-    gameBoard.placeShip(destroyer, 4, 4, 'right');
+    gameBoard = gameBoard.placeShip(destroyer, 4, 4, 'right');
     expect(() => gameBoard.placeShip(carrier, 4, 4, 'right')).toThrow(
       'Placed ship collides with already-existing ship.'
     );
@@ -173,21 +173,21 @@ describe('createGameBoard', () => {
   test("receiveAttack won't accept previously attacked coordinates", () => {
     const carrierA = createShip(5);
     const carrierB = createShip(5);
-    const gameBoard = createGameBoard(5, 5);
-    gameBoard.placeShip(carrierA, 0, 0, 'right');
-    gameBoard.placeShip(carrierB, 0, 1, 'right');
+    let gameBoard = createGameBoard(5, 5);
+    gameBoard = gameBoard.placeShip(carrierA, 0, 0, 'right');
+    gameBoard = gameBoard.placeShip(carrierB, 0, 1, 'right');
 
     // Missed attacks
-    gameBoard.receiveAttack(0, 2);
-    gameBoard.receiveAttack(2, 2);
-    gameBoard.receiveAttack(4, 2);
+    gameBoard = gameBoard.receiveAttack(0, 2);
+    gameBoard = gameBoard.receiveAttack(2, 2);
+    gameBoard = gameBoard.receiveAttack(4, 2);
     // Hit attacks
-    gameBoard.receiveAttack(0, 0);
-    gameBoard.receiveAttack(2, 0);
-    gameBoard.receiveAttack(4, 0);
-    gameBoard.receiveAttack(0, 1);
-    gameBoard.receiveAttack(2, 1);
-    gameBoard.receiveAttack(4, 1);
+    gameBoard = gameBoard.receiveAttack(0, 0);
+    gameBoard = gameBoard.receiveAttack(2, 0);
+    gameBoard = gameBoard.receiveAttack(4, 0);
+    gameBoard = gameBoard.receiveAttack(0, 1);
+    gameBoard = gameBoard.receiveAttack(2, 1);
+    gameBoard = gameBoard.receiveAttack(4, 1);
 
     // Previously-missed attacks
     expect(() => gameBoard.receiveAttack(0, 2)).toThrow(
@@ -222,12 +222,12 @@ describe('createGameBoard', () => {
 
   test('Attacking a ship hits the cell', () => {
     const carrier = createShip(5);
-    const gameBoard = createGameBoard(5, 5);
+    let gameBoard = createGameBoard(5, 5);
 
-    gameBoard.placeShip(carrier, 0, 0, 'right');
-    gameBoard.receiveAttack(0, 0);
-    gameBoard.receiveAttack(2, 0);
-    gameBoard.receiveAttack(4, 0);
+    gameBoard = gameBoard.placeShip(carrier, 0, 0, 'right');
+    gameBoard = gameBoard.receiveAttack(0, 0);
+    gameBoard = gameBoard.receiveAttack(2, 0);
+    gameBoard = gameBoard.receiveAttack(4, 0);
 
     expect(gameBoard.shipLocations[0].ship.hitCells[0]).toBe(true);
     expect(gameBoard.shipLocations[0].ship.hitCells[1]).toBe(false);
@@ -240,12 +240,12 @@ describe('createGameBoard', () => {
 
   test('Missing a ship adds the attack to missedAttacks', () => {
     const carrier = createShip(5);
-    const gameBoard = createGameBoard(5, 5);
+    let gameBoard = createGameBoard(5, 5);
 
-    gameBoard.placeShip(carrier, 0, 0, 'right');
-    gameBoard.receiveAttack(0, 1);
-    gameBoard.receiveAttack(2, 1);
-    gameBoard.receiveAttack(4, 1);
+    gameBoard = gameBoard.placeShip(carrier, 0, 0, 'right');
+    gameBoard = gameBoard.receiveAttack(0, 1);
+    gameBoard = gameBoard.receiveAttack(2, 1);
+    gameBoard = gameBoard.receiveAttack(4, 1);
 
     expect(gameBoard.missedAttacks).toEqual([
       { x: 0, y: 1 },
@@ -258,17 +258,17 @@ describe('createGameBoard', () => {
     const destroyerA = createShip(2);
     const destroyerB = createShip(2);
     const destroyerC = createShip(2);
-    const gameBoard = createGameBoard(5, 5);
+    let gameBoard = createGameBoard(5, 5);
 
-    gameBoard.placeShip(destroyerA, 0, 0, 'right');
-    gameBoard.placeShip(destroyerB, 0, 1, 'right');
-    gameBoard.placeShip(destroyerC, 0, 2, 'right');
+    gameBoard = gameBoard.placeShip(destroyerA, 0, 0, 'right');
+    gameBoard = gameBoard.placeShip(destroyerB, 0, 1, 'right');
+    gameBoard = gameBoard.placeShip(destroyerC, 0, 2, 'right');
     expect(gameBoard.areAllShipsSunk()).toBe(false);
 
-    gameBoard.receiveAttack(0, 0);
-    gameBoard.receiveAttack(1, 0);
-    gameBoard.receiveAttack(0, 1);
-    gameBoard.receiveAttack(1, 1);
+    gameBoard = gameBoard.receiveAttack(0, 0);
+    gameBoard = gameBoard.receiveAttack(1, 0);
+    gameBoard = gameBoard.receiveAttack(0, 1);
+    gameBoard = gameBoard.receiveAttack(1, 1);
     expect(gameBoard.areAllShipsSunk()).toBe(false);
   });
 
@@ -276,18 +276,18 @@ describe('createGameBoard', () => {
     const destroyerA = createShip(2);
     const destroyerB = createShip(2);
     const destroyerC = createShip(2);
-    const gameBoard = createGameBoard(5, 5);
+    let gameBoard = createGameBoard(5, 5);
 
-    gameBoard.placeShip(destroyerA, 0, 0, 'right');
-    gameBoard.placeShip(destroyerB, 0, 1, 'right');
-    gameBoard.placeShip(destroyerC, 0, 2, 'right');
+    gameBoard = gameBoard.placeShip(destroyerA, 0, 0, 'right');
+    gameBoard = gameBoard.placeShip(destroyerB, 0, 1, 'right');
+    gameBoard = gameBoard.placeShip(destroyerC, 0, 2, 'right');
 
-    gameBoard.receiveAttack(0, 0);
-    gameBoard.receiveAttack(1, 0);
-    gameBoard.receiveAttack(0, 1);
-    gameBoard.receiveAttack(1, 1);
-    gameBoard.receiveAttack(0, 2);
-    gameBoard.receiveAttack(1, 2);
+    gameBoard = gameBoard.receiveAttack(0, 0);
+    gameBoard = gameBoard.receiveAttack(1, 0);
+    gameBoard = gameBoard.receiveAttack(0, 1);
+    gameBoard = gameBoard.receiveAttack(1, 1);
+    gameBoard = gameBoard.receiveAttack(0, 2);
+    gameBoard = gameBoard.receiveAttack(1, 2);
     expect(gameBoard.areAllShipsSunk()).toBe(true);
   });
 });

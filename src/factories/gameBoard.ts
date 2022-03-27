@@ -1,4 +1,3 @@
-import { createNonNullExpression } from 'typescript';
 import { Ship } from './ship';
 
 type Axis = 'horizontal' | 'vertical';
@@ -22,14 +21,16 @@ interface GameBoard {
   shipLocations: ShipLocation[];
   missedAttacks: Coord[];
   areAllShipsSunk: () => boolean;
-  placeShip: (ship: Ship, x: number, y: number, direction: Direction) => void;
-  receiveAttack: (x: number, y: number) => void;
+  placeShip: (
+    ship: Ship,
+    x: number,
+    y: number,
+    direction: Direction
+  ) => GameBoard;
+  receiveAttack: (x: number, y: number) => GameBoard;
 }
 
 const createGameBoard = function (width: number, height: number): GameBoard {
-  const missedAttacks: Coord[] = [];
-  let shipLocations: ShipLocation[] = [];
-
   /**
    * Get a list of cells occupied by the ship at the given ShipLocation.
    */
@@ -123,7 +124,11 @@ const createGameBoard = function (width: number, height: number): GameBoard {
     );
   };
 
-  const wasPreviouslyAttacked = function (x: number, y: number) {
+  const wasPreviouslyAttacked = function (
+    this: GameBoard,
+    x: number,
+    y: number
+  ) {
     const outOfBoundsErrorMessage = (axis: string) =>
       `Given coordinate is out of bounds on the ${axis} axis.`;
 
@@ -137,10 +142,11 @@ const createGameBoard = function (width: number, height: number): GameBoard {
       throw new Error(outOfBoundsErrorMessage('y'));
     }
 
-    const anyMatchingMissedAttacks = missedAttacks.some((attackCoord) =>
+    const anyMatchingMissedAttacks = this.missedAttacks.some((attackCoord) =>
       coordEquals(attackCoord, { x, y })
     );
-    const anyMatchingHitAttacks = shipLocations.some((shipLocation) =>
+
+    const anyMatchingHitAttacks = this.shipLocations.some((shipLocation) =>
       getShipCells(shipLocation).some((cellCoord, index) => {
         const ship = shipLocation.ship;
         return coordEquals(cellCoord, { x, y }) && ship.hitCells[index];
@@ -153,19 +159,22 @@ const createGameBoard = function (width: number, height: number): GameBoard {
   /**
    * Determines whether all ships on this game board are sunk.
    */
-  const areAllShipsSunk = function () {
-    return shipLocations.every((shipLocation) => shipLocation.ship.isSunk());
+  const areAllShipsSunk = function (this: GameBoard) {
+    return this.shipLocations.every((shipLocation) =>
+      shipLocation.ship.isSunk()
+    );
   };
 
   /**
    * Places a ship at the given coordinates, facing the given direction>
    */
   const placeShip = function (
+    this: GameBoard,
     ship: Ship,
     x: number,
     y: number,
     direction: Direction
-  ) {
+  ): GameBoard {
     const shipLocation = { ship, coords: { x, y }, direction };
 
     // Out of bounds error checking
@@ -181,17 +190,22 @@ const createGameBoard = function (width: number, height: number): GameBoard {
 
     // Collision error checking
     if (
-      shipLocations.some((existingShipLocation) =>
+      this.shipLocations.some((existingShipLocation) =>
         isShipCollision(shipLocation, existingShipLocation)
       )
     ) {
       throw new Error('Placed ship collides with already-existing ship.');
     }
 
-    shipLocations.push(shipLocation);
+    const newShipLocations = [...this.shipLocations, shipLocation];
+    return { ...this, shipLocations: newShipLocations };
   };
 
-  const receiveAttack = function (x: number, y: number): void {
+  const receiveAttack = function (
+    this: GameBoard,
+    x: number,
+    y: number
+  ): GameBoard {
     const outOfBoundsErrorMessage = (axis: string) =>
       `Given coordinate is out of bounds on the ${axis} axis.`;
 
@@ -205,39 +219,41 @@ const createGameBoard = function (width: number, height: number): GameBoard {
       throw new Error(outOfBoundsErrorMessage('y'));
     }
 
-    if (wasPreviouslyAttacked(x, y)) {
+    if (wasPreviouslyAttacked.call(this, x, y)) {
       throw new Error('Given coordinate was previously attacked.');
     }
 
     // Try each ship to see if there's a hit
     let shipHit = false;
-    shipLocations.forEach((shipLocation, shipLocationIndex) => {
-      const ship = shipLocation.ship;
+    const shipLocations = this.shipLocations.map((shipLocation) => {
+      let ship = shipLocation.ship;
       const shipCells = getShipCells(shipLocation);
+
       shipCells.forEach(({ x: cellX, y: cellY }, cellIndex) => {
         if (x === cellX && y === cellY) {
-          const newShip = ship.hit(cellIndex);
-          shipLocations[shipLocationIndex] = { ...shipLocation, ship: newShip };
+          ship = ship.hit(cellIndex);
           shipHit = true;
         }
       });
+      return { ...shipLocation, ship };
     });
 
     // If there was no hit, add targeted coordinates to missedAttacks
-    if (!shipHit) {
-      missedAttacks.push({ x, y });
-    }
+    const missedAttacks = shipHit
+      ? this.missedAttacks
+      : [...this.missedAttacks, { x, y }];
+
+    return { ...this, shipLocations, missedAttacks };
   };
 
   return {
     dimensions: { width, height },
-    shipLocations,
-    missedAttacks,
+    shipLocations: [],
+    missedAttacks: [],
     areAllShipsSunk,
     placeShip,
     receiveAttack,
   };
 };
 
-export type { Coord, GameBoard };
 export { createGameBoard };
