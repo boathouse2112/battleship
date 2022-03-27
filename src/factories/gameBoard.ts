@@ -1,3 +1,4 @@
+import { createNonNullExpression } from 'typescript';
 import { Ship } from './ship';
 
 type Axis = 'horizontal' | 'vertical';
@@ -27,7 +28,7 @@ interface GameBoard {
 
 const createGameBoard = function (width: number, height: number): GameBoard {
   const missedAttacks: Coord[] = [];
-  const shipLocations: ShipLocation[] = [];
+  let shipLocations: ShipLocation[] = [];
 
   /**
    * Get a list of cells occupied by the ship at the given ShipLocation.
@@ -210,12 +211,13 @@ const createGameBoard = function (width: number, height: number): GameBoard {
 
     // Try each ship to see if there's a hit
     let shipHit = false;
-    shipLocations.forEach((shipLocation) => {
+    shipLocations.forEach((shipLocation, shipLocationIndex) => {
       const ship = shipLocation.ship;
       const shipCells = getShipCells(shipLocation);
-      shipCells.forEach(({ x: cellX, y: cellY }, index) => {
+      shipCells.forEach(({ x: cellX, y: cellY }, cellIndex) => {
         if (x === cellX && y === cellY) {
-          ship.hit(index);
+          const newShip = ship.hit(cellIndex);
+          shipLocations[shipLocationIndex] = { ...shipLocation, ship: newShip };
           shipHit = true;
         }
       });
