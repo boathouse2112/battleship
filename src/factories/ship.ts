@@ -1,7 +1,9 @@
+import { replaceAt } from '../util';
+
 interface Ship {
   length: number;
   hitCells: boolean[];
-  hit(cell: number): void;
+  hit(cell: number): Ship;
   isSunk(): boolean;
 }
 
@@ -14,21 +16,18 @@ interface Ship {
  * - isSunk: Whether all cells have been hit, and the ship has been sunk
  */
 const createShip = function (length: number): Ship {
-  const hitCells: boolean[] = Array(length).fill(false);
+  const _hitCells: boolean[] = Array(length).fill(false);
 
-  /**
-   * Marks the given cell as hit
-   * @param cell the index of the cell to mark as hit
-   */
-  const hit = function (cell: number) {
-    hitCells[cell] = true;
+  const hit = function (this: Ship, cell: number) {
+    const hitCells = replaceAt(this.hitCells, cell, true);
+    return { length, hitCells, hit, isSunk };
   };
 
-  const isSunk = function () {
-    return hitCells.every((cell) => cell);
+  const isSunk = function (this: Ship) {
+    return this.hitCells.every((cell) => cell);
   };
 
-  return { length, hitCells, hit, isSunk };
+  return { length, hitCells: _hitCells, hit, isSunk };
 };
 
 export type { Ship };
