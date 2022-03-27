@@ -146,4 +146,61 @@ describe('createGameBoard', () => {
     expect(() => gameBoard.placeShip(destroyer, 2, 2, 'down')).not.toThrow();
     expect(() => gameBoard.placeShip(destroyer, 2, 4, 'down')).not.toThrow();
   });
+
+  test("receiveAttack won't accept out-of-bounds attacks", () => {
+    const gameBoard = createGameBoard(5, 5);
+
+    expect(() => gameBoard.receiveAttack(-1, -1)).toThrow(
+      'Given coordinate is out of bounds on the x and y axis.'
+    );
+    expect(() => gameBoard.receiveAttack(5, 5)).toThrow(
+      'Given coordinate is out of bounds on the x and y axis.'
+    );
+    expect(() => gameBoard.receiveAttack(-1, 0)).toThrow(
+      'Given coordinate is out of bounds on the x axis.'
+    );
+    expect(() => gameBoard.receiveAttack(5, 0)).toThrow(
+      'Given coordinate is out of bounds on the x axis.'
+    );
+    expect(() => gameBoard.receiveAttack(0, -1)).toThrow(
+      'Given coordinate is out of bounds on the y axis.'
+    );
+    expect(() => gameBoard.receiveAttack(0, 5)).toThrow(
+      'Given coordinate is out of bounds on the y axis.'
+    );
+  });
+
+  test('Attacking a ship hits the cell', () => {
+    const carrier = createShip(5);
+    const gameBoard = createGameBoard(5, 5);
+
+    gameBoard.placeShip(carrier, 0, 0, 'right');
+    gameBoard.receiveAttack(0, 0);
+    gameBoard.receiveAttack(2, 0);
+    gameBoard.receiveAttack(4, 0);
+
+    expect(gameBoard.ships[0].ship.hitCells[0]).toBe(true);
+    expect(gameBoard.ships[0].ship.hitCells[1]).toBe(false);
+    expect(gameBoard.ships[0].ship.hitCells[2]).toBe(true);
+    expect(gameBoard.ships[0].ship.hitCells[3]).toBe(false);
+    expect(gameBoard.ships[0].ship.hitCells[4]).toBe(true);
+
+    expect(gameBoard.missedAttacks).toEqual([]);
+  });
+
+  test('Missing a ship adds the attack to missedAttacks', () => {
+    const carrier = createShip(5);
+    const gameBoard = createGameBoard(5, 5);
+
+    gameBoard.placeShip(carrier, 0, 0, 'right');
+    gameBoard.receiveAttack(0, 1);
+    gameBoard.receiveAttack(2, 1);
+    gameBoard.receiveAttack(4, 1);
+
+    expect(gameBoard.missedAttacks).toEqual([
+      { x: 0, y: 1 },
+      { x: 2, y: 1 },
+      { x: 4, y: 1 },
+    ]);
+  });
 });

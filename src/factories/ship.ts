@@ -1,6 +1,6 @@
 interface Ship {
   length: number;
-  isCellHit: boolean[];
+  hitCells: boolean[];
   hit(cell: number): void;
   isSunk(): boolean;
 }
@@ -14,21 +14,21 @@ interface Ship {
  * - isSunk: Whether all cells have been hit, and the ship has been sunk
  */
 const createShip = function (length: number): Ship {
-  const isCellHit: boolean[] = Array(length).fill(false);
+  const hitCells: boolean[] = Array(length).fill(false);
 
   /**
    * Marks the given cell as hit
    * @param cell the index of the cell to mark as hit
    */
   const hit = function (cell: number) {
-    isCellHit[cell] = true;
+    hitCells[cell] = true;
   };
 
   const isSunk = function () {
-    return isCellHit.every((cell) => cell);
+    return hitCells.every((cell) => cell);
   };
 
-  return { length, isCellHit, hit, isSunk };
+  return { length, hitCells, hit, isSunk };
 };
 
 export type { Ship };

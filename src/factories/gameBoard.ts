@@ -1,29 +1,23 @@
 import { Ship } from './ship';
 
 type Axis = 'horizontal' | 'vertical';
+type Coord = { x: number; y: number };
 type Direction = 'right' | 'down';
 
 type ShipLocation = {
   ship: Ship;
-  coords: { x: number; y: number };
+  coords: Coord;
   direction: Direction;
 };
 
 const createGameBoard = function (width: number, height: number) {
+  const missedAttacks: Coord[] = [];
   const ships: ShipLocation[] = [];
 
-  const cellInBounds = function (cell: number, axis: Axis) {
-    if (axis === 'horizontal') {
-      return cell >= 0 && cell < width;
-    } else {
-      return cell >= 0 && cell < height;
-    }
-  };
-
   /**
-   * Get a list of cells occupied by the ship at the given ShipLocation
+   * Get a list of cells occupied by the ship at the given ShipLocation.
    */
-  const shipCells = function (shipLocation: ShipLocation): {
+  const getShipCells = function (shipLocation: ShipLocation): {
     x: number;
     y: number;
   }[] {
@@ -46,8 +40,19 @@ const createGameBoard = function (width: number, height: number) {
   };
 
   /**
+   * Determines whether the given cell is in bounds on the given axis.
+   */
+  const isCellInBounds = function (cell: number, axis: Axis) {
+    if (axis === 'horizontal') {
+      return cell >= 0 && cell < width;
+    } else {
+      return cell >= 0 && cell < height;
+    }
+  };
+
+  /**
    * Determines if given ship location is in-bounds.
-   * If axis is given, determines only on that axis
+   * If axis is given, determines only on that axis.
    */
   const isShipInBounds = function (shipLocation: ShipLocation, axis?: Axis) {
     const { ship, coords, direction } = shipLocation;
@@ -63,25 +68,25 @@ const createGameBoard = function (width: number, height: number) {
         const rightEndCell = shipEndCell(x, ship);
         inBounds =
           inBounds &&
-          cellInBounds(x, 'horizontal') &&
-          cellInBounds(rightEndCell, 'horizontal');
+          isCellInBounds(x, 'horizontal') &&
+          isCellInBounds(rightEndCell, 'horizontal');
       } else {
         // x must be in bounds
-        inBounds = inBounds && cellInBounds(x, 'horizontal');
+        inBounds = inBounds && isCellInBounds(x, 'horizontal');
       }
     }
 
     if (typeof axis === 'undefined' || axis === 'vertical') {
       if (direction === 'right') {
         // y must be in bounds
-        inBounds = inBounds && cellInBounds(y, 'vertical');
+        inBounds = inBounds && isCellInBounds(y, 'vertical');
       } else {
         // y and (y + ship.length - 1) must be in bounds
         const downEndCell = shipEndCell(y, ship);
         inBounds =
           inBounds &&
-          cellInBounds(y, 'vertical') &&
-          cellInBounds(downEndCell, 'vertical');
+          isCellInBounds(y, 'vertical') &&
+          isCellInBounds(downEndCell, 'vertical');
       }
     }
 
@@ -92,8 +97,8 @@ const createGameBoard = function (width: number, height: number) {
    * Determines if the ships at the given ship locations collide on any occupied cell.
    */
   const isShipCollision = function (shipA: ShipLocation, shipB: ShipLocation) {
-    const shipACells = shipCells(shipA);
-    const shipBCells = shipCells(shipB);
+    const shipACells = getShipCells(shipA);
+    const shipBCells = getShipCells(shipB);
     return shipACells.some((shipACell) =>
       shipBCells.some(
         (shipBCell) =>
@@ -104,9 +109,6 @@ const createGameBoard = function (width: number, height: number) {
 
   /**
    * Places a ship at the given coordinates, facing the given direction
-   * @param x X coord
-   * @param y Y coord
-   * @param direction 'down' | 'right'
    */
   const placeShip = function (
     ship: Ship,
@@ -139,12 +141,46 @@ const createGameBoard = function (width: number, height: number) {
     ships.push(shipLocation);
   };
 
+  const receiveAttack = function (x: number, y: number): void {
+    const outOfBoundsErrorMessage = (axis: string) =>
+      `Given coordinate is out of bounds on the ${axis} axis.`;
+
+    if (!isCellInBounds(x, 'horizontal') && !isCellInBounds(y, 'vertical')) {
+      throw new Error(outOfBoundsErrorMessage('x and y'));
+    }
+    if (!isCellInBounds(x, 'horizontal')) {
+      throw new Error(outOfBoundsErrorMessage('x'));
+    }
+    if (!isCellInBounds(y, 'vertical')) {
+      throw new Error(outOfBoundsErrorMessage('y'));
+    }
+
+    // Try each ship to see if there's a hit
+    let shipHit = false;
+    ships.forEach((shipLocation) => {
+      const ship = shipLocation.ship;
+      const shipCells = getShipCells(shipLocation);
+      shipCells.forEach(({ x: cellX, y: cellY }, index) => {
+        if (x === cellX && y === cellY) {
+          ship.hit(index);
+          shipHit = true;
+        }
+      });
+    });
+
+    // If there was no hit, add targeted coordinates to missedAttacks
+    if (!shipHit) {
+      missedAttacks.push({ x, y });
+    }
+  };
+
   return {
     dimensions: { width, height },
     height,
     ships,
+    missedAttacks,
     placeShip,
-    isShipCollision,
+    receiveAttack,
   };
 };
 

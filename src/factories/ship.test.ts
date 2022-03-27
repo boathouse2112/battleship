@@ -1,20 +1,20 @@
 import { createShip } from './ship';
 
 describe('createShip', () => {
-  test('created ship has length, isCellHit, and isSunk properties', () => {
+  test('created ship has length, hitCells, and isSunk properties', () => {
     const ship = createShip(8);
     expect(ship.length).toBe(8);
-    expect(ship.isCellHit).toHaveLength(8);
+    expect(ship.hitCells).toHaveLength(8);
     expect(ship.isSunk()).toBe(false);
   });
   test('ship.hit marks only the given cell as hit', () => {
     const ship = createShip(8);
     ship.hit(6);
     // Cell 7 is hit
-    expect(ship.isCellHit[6]).toBe(true);
+    expect(ship.hitCells[6]).toBe(true);
     // No other cells are hit
-    ship.isCellHit.slice(0, 6).forEach((cell) => expect(cell).toBe(false));
-    expect(ship.isCellHit[7]).toBe(false);
+    ship.hitCells.slice(0, 6).forEach((cell) => expect(cell).toBe(false));
+    expect(ship.hitCells[7]).toBe(false);
   });
   test('ship.isSunk is true if all cells have been hit', () => {
     const ship = createShip(3);
