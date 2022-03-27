@@ -2,6 +2,9 @@ import { Ship } from './ship';
 
 type Axis = 'horizontal' | 'vertical';
 type Coord = { x: number; y: number };
+
+const coordEquals = (a: Coord, b: Coord) => a.x === b.x && a.y === b.y;
+
 type Direction = 'right' | 'down';
 
 type ShipLocation = {
@@ -12,7 +15,7 @@ type ShipLocation = {
 
 const createGameBoard = function (width: number, height: number) {
   const missedAttacks: Coord[] = [];
-  const ships: ShipLocation[] = [];
+  const shipLocations: ShipLocation[] = [];
 
   /**
    * Get a list of cells occupied by the ship at the given ShipLocation.
@@ -107,8 +110,42 @@ const createGameBoard = function (width: number, height: number) {
     );
   };
 
+  const wasPreviouslyAttacked = function (x: number, y: number) {
+    const outOfBoundsErrorMessage = (axis: string) =>
+      `Given coordinate is out of bounds on the ${axis} axis.`;
+
+    if (!isCellInBounds(x, 'horizontal') && !isCellInBounds(y, 'vertical')) {
+      throw new Error(outOfBoundsErrorMessage('x and y'));
+    }
+    if (!isCellInBounds(x, 'horizontal')) {
+      throw new Error(outOfBoundsErrorMessage('x'));
+    }
+    if (!isCellInBounds(y, 'vertical')) {
+      throw new Error(outOfBoundsErrorMessage('y'));
+    }
+
+    const anyMatchingMissedAttacks = missedAttacks.some((attackCoord) =>
+      coordEquals(attackCoord, { x, y })
+    );
+    const anyMatchingHitAttacks = shipLocations.some((shipLocation) =>
+      getShipCells(shipLocation).some((cellCoord, index) => {
+        const ship = shipLocation.ship;
+        return coordEquals(cellCoord, { x, y }) && ship.hitCells[index];
+      })
+    );
+
+    return anyMatchingMissedAttacks || anyMatchingHitAttacks;
+  };
+
   /**
-   * Places a ship at the given coordinates, facing the given direction
+   * Determines whether all ships on this game board are sunk.
+   */
+  const areAllShipsSunk = function () {
+    return shipLocations.every((shipLocation) => shipLocation.ship.isSunk());
+  };
+
+  /**
+   * Places a ship at the given coordinates, facing the given direction>
    */
   const placeShip = function (
     ship: Ship,
@@ -131,14 +168,14 @@ const createGameBoard = function (width: number, height: number) {
 
     // Collision error checking
     if (
-      ships.some((existingShipLocation) =>
+      shipLocations.some((existingShipLocation) =>
         isShipCollision(shipLocation, existingShipLocation)
       )
     ) {
       throw new Error('Placed ship collides with already-existing ship.');
     }
 
-    ships.push(shipLocation);
+    shipLocations.push(shipLocation);
   };
 
   const receiveAttack = function (x: number, y: number): void {
@@ -155,9 +192,13 @@ const createGameBoard = function (width: number, height: number) {
       throw new Error(outOfBoundsErrorMessage('y'));
     }
 
+    if (wasPreviouslyAttacked(x, y)) {
+      throw new Error('Given coordinate was previously attacked.');
+    }
+
     // Try each ship to see if there's a hit
     let shipHit = false;
-    ships.forEach((shipLocation) => {
+    shipLocations.forEach((shipLocation) => {
       const ship = shipLocation.ship;
       const shipCells = getShipCells(shipLocation);
       shipCells.forEach(({ x: cellX, y: cellY }, index) => {
@@ -177,8 +218,9 @@ const createGameBoard = function (width: number, height: number) {
   return {
     dimensions: { width, height },
     height,
-    ships,
+    shipLocations,
     missedAttacks,
+    areAllShipsSunk,
     placeShip,
     receiveAttack,
   };

@@ -13,9 +13,9 @@ describe('createGameBoard', () => {
 
     gameBoard.placeShip(destroyer, 4, 5, 'right');
 
-    expect(gameBoard.ships[0].ship).toBe(destroyer);
-    expect(gameBoard.ships[0].coords).toStrictEqual({ x: 4, y: 5 });
-    expect(gameBoard.ships[0].direction).toBe('right');
+    expect(gameBoard.shipLocations[0].ship).toBe(destroyer);
+    expect(gameBoard.shipLocations[0].coords).toStrictEqual({ x: 4, y: 5 });
+    expect(gameBoard.shipLocations[0].direction).toBe('right');
   });
 
   test("placeShip won't place ships out of bounds", () => {
@@ -170,6 +170,56 @@ describe('createGameBoard', () => {
     );
   });
 
+  test("receiveAttack won't accept previously attacked coordinates", () => {
+    const carrierA = createShip(5);
+    const carrierB = createShip(5);
+    const gameBoard = createGameBoard(5, 5);
+    gameBoard.placeShip(carrierA, 0, 0, 'right');
+    gameBoard.placeShip(carrierB, 0, 1, 'right');
+
+    // Missed attacks
+    gameBoard.receiveAttack(0, 2);
+    gameBoard.receiveAttack(2, 2);
+    gameBoard.receiveAttack(4, 2);
+    // Hit attacks
+    gameBoard.receiveAttack(0, 0);
+    gameBoard.receiveAttack(2, 0);
+    gameBoard.receiveAttack(4, 0);
+    gameBoard.receiveAttack(0, 1);
+    gameBoard.receiveAttack(2, 1);
+    gameBoard.receiveAttack(4, 1);
+
+    // Previously-missed attacks
+    expect(() => gameBoard.receiveAttack(0, 2)).toThrow(
+      'Given coordinate was previously attacked.'
+    );
+    expect(() => gameBoard.receiveAttack(2, 2)).toThrow(
+      'Given coordinate was previously attacked.'
+    );
+    expect(() => gameBoard.receiveAttack(4, 2)).toThrow(
+      'Given coordinate was previously attacked.'
+    );
+    // Previously-hit attacks
+    expect(() => gameBoard.receiveAttack(0, 0)).toThrow(
+      'Given coordinate was previously attacked.'
+    );
+    expect(() => gameBoard.receiveAttack(2, 0)).toThrow(
+      'Given coordinate was previously attacked.'
+    );
+    expect(() => gameBoard.receiveAttack(4, 0)).toThrow(
+      'Given coordinate was previously attacked.'
+    );
+    expect(() => gameBoard.receiveAttack(0, 1)).toThrow(
+      'Given coordinate was previously attacked.'
+    );
+    expect(() => gameBoard.receiveAttack(2, 1)).toThrow(
+      'Given coordinate was previously attacked.'
+    );
+    expect(() => gameBoard.receiveAttack(4, 1)).toThrow(
+      'Given coordinate was previously attacked.'
+    );
+  });
+
   test('Attacking a ship hits the cell', () => {
     const carrier = createShip(5);
     const gameBoard = createGameBoard(5, 5);
@@ -179,11 +229,11 @@ describe('createGameBoard', () => {
     gameBoard.receiveAttack(2, 0);
     gameBoard.receiveAttack(4, 0);
 
-    expect(gameBoard.ships[0].ship.hitCells[0]).toBe(true);
-    expect(gameBoard.ships[0].ship.hitCells[1]).toBe(false);
-    expect(gameBoard.ships[0].ship.hitCells[2]).toBe(true);
-    expect(gameBoard.ships[0].ship.hitCells[3]).toBe(false);
-    expect(gameBoard.ships[0].ship.hitCells[4]).toBe(true);
+    expect(gameBoard.shipLocations[0].ship.hitCells[0]).toBe(true);
+    expect(gameBoard.shipLocations[0].ship.hitCells[1]).toBe(false);
+    expect(gameBoard.shipLocations[0].ship.hitCells[2]).toBe(true);
+    expect(gameBoard.shipLocations[0].ship.hitCells[3]).toBe(false);
+    expect(gameBoard.shipLocations[0].ship.hitCells[4]).toBe(true);
 
     expect(gameBoard.missedAttacks).toEqual([]);
   });
@@ -202,5 +252,42 @@ describe('createGameBoard', () => {
       { x: 2, y: 1 },
       { x: 4, y: 1 },
     ]);
+  });
+
+  test('If only some ships are sunk, areAllShipsSunk returns false', () => {
+    const destroyerA = createShip(2);
+    const destroyerB = createShip(2);
+    const destroyerC = createShip(2);
+    const gameBoard = createGameBoard(5, 5);
+
+    gameBoard.placeShip(destroyerA, 0, 0, 'right');
+    gameBoard.placeShip(destroyerB, 0, 1, 'right');
+    gameBoard.placeShip(destroyerC, 0, 2, 'right');
+    expect(gameBoard.areAllShipsSunk()).toBe(false);
+
+    gameBoard.receiveAttack(0, 0);
+    gameBoard.receiveAttack(1, 0);
+    gameBoard.receiveAttack(0, 1);
+    gameBoard.receiveAttack(1, 1);
+    expect(gameBoard.areAllShipsSunk()).toBe(false);
+  });
+
+  test('If all ships are sunk, areAllShipsSunk returns true', () => {
+    const destroyerA = createShip(2);
+    const destroyerB = createShip(2);
+    const destroyerC = createShip(2);
+    const gameBoard = createGameBoard(5, 5);
+
+    gameBoard.placeShip(destroyerA, 0, 0, 'right');
+    gameBoard.placeShip(destroyerB, 0, 1, 'right');
+    gameBoard.placeShip(destroyerC, 0, 2, 'right');
+
+    gameBoard.receiveAttack(0, 0);
+    gameBoard.receiveAttack(1, 0);
+    gameBoard.receiveAttack(0, 1);
+    gameBoard.receiveAttack(1, 1);
+    gameBoard.receiveAttack(0, 2);
+    gameBoard.receiveAttack(1, 2);
+    expect(gameBoard.areAllShipsSunk()).toBe(true);
   });
 });
