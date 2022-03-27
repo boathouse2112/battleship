@@ -7,13 +7,25 @@ const coordEquals = (a: Coord, b: Coord) => a.x === b.x && a.y === b.y;
 
 type Direction = 'right' | 'down';
 
-type ShipLocation = {
+interface ShipLocation {
   ship: Ship;
   coords: Coord;
   direction: Direction;
-};
+}
 
-const createGameBoard = function (width: number, height: number) {
+interface GameBoard {
+  dimensions: {
+    width: number;
+    height: number;
+  };
+  shipLocations: ShipLocation[];
+  missedAttacks: Coord[];
+  areAllShipsSunk: () => boolean;
+  placeShip: (ship: Ship, x: number, y: number, direction: Direction) => void;
+  receiveAttack: (x: number, y: number) => void;
+}
+
+const createGameBoard = function (width: number, height: number): GameBoard {
   const missedAttacks: Coord[] = [];
   const shipLocations: ShipLocation[] = [];
 
@@ -217,7 +229,6 @@ const createGameBoard = function (width: number, height: number) {
 
   return {
     dimensions: { width, height },
-    height,
     shipLocations,
     missedAttacks,
     areAllShipsSunk,
@@ -226,4 +237,5 @@ const createGameBoard = function (width: number, height: number) {
   };
 };
 
+export type { Coord, GameBoard };
 export { createGameBoard };
