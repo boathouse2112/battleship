@@ -1,3 +1,10 @@
+interface Ship {
+  length: number;
+  isCellHit: boolean[];
+  hit(cell: number): void;
+  isSunk(): boolean;
+}
+
 /**
  * Creates a battleship ship.
  * @param length length of the ship
@@ -6,8 +13,8 @@
  * - isCellHit: array indicating whether the nth cell has been hit
  * - isSunk: Whether all cells have been hit, and the ship has been sunk
  */
-const createShip = function (length: number) {
-  const isCellHit: Array<boolean> = Array(length).fill(false);
+const createShip = function (length: number): Ship {
+  const isCellHit: boolean[] = Array(length).fill(false);
 
   /**
    * Marks the given cell as hit
@@ -24,4 +31,5 @@ const createShip = function (length: number) {
   return { length, isCellHit, hit, isSunk };
 };
 
+export type { Ship };
 export { createShip };
