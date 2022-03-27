@@ -15,6 +15,7 @@ const computerPlayer = (function () {
     }
     return attacks;
   };
+
   /**
    * Makes a random in-bounds attack that has not already been made.
    */
