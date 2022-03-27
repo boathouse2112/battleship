@@ -1,20 +1,66 @@
 import { Ship } from './ship';
 
+type Axis = 'horizontal' | 'vertical';
 type Direction = 'right' | 'down';
 
-const createGameBoard = function (width: number, height: number) {
-  const ships: {
-    ship: Ship;
-    coords: { x: number; y: number };
-    direction: Direction;
-  }[] = [];
+type ShipLocation = {
+  ship: Ship;
+  coords: { x: number; y: number };
+  direction: Direction;
+};
 
-  const inBounds = function (cell: number, axis: 'horizontal' | 'vertical') {
+const createGameBoard = function (width: number, height: number) {
+  const ships: ShipLocation[] = [];
+
+  const cellInBounds = function (cell: number, axis: Axis) {
     if (axis === 'horizontal') {
       return cell >= 0 && cell < width;
     } else {
       return cell >= 0 && cell < height;
     }
+  };
+
+  /**
+   * Determines if given ship location is in-bounds.
+   * If axis is given, determines only on that axis
+   */
+  const shipInBounds = function (shipLocation: ShipLocation, axis?: Axis) {
+    const { ship, coords, direction } = shipLocation;
+    const { x, y } = coords;
+
+    const shipEndCell = (startCell: number, ship: Ship) =>
+      startCell + ship.length - 1;
+
+    let inBounds = true;
+    if (typeof axis === 'undefined' || axis === 'horizontal') {
+      if (direction === 'right') {
+        // x and (x + ship.length - 1) must be in bounds
+        const rightEndCell = shipEndCell(x, ship);
+        inBounds =
+          inBounds &&
+          cellInBounds(x, 'horizontal') &&
+          cellInBounds(rightEndCell, 'horizontal');
+      } else {
+        // x must be in bounds
+        inBounds = inBounds && cellInBounds(x, 'horizontal');
+      }
+    }
+
+    if (typeof axis === 'undefined' || axis === 'vertical') {
+      if (direction === 'right') {
+        // y must be in bounds
+        inBounds = inBounds && cellInBounds(y, 'vertical');
+      } else {
+        // y and (y + ship.length - 1) must be in bounds
+        const downEndCell = shipEndCell(y, ship);
+        inBounds =
+          inBounds &&
+          cellInBounds(y, 'vertical') &&
+          cellInBounds(downEndCell, 'vertical');
+      }
+    }
+
+    return inBounds;
   };
 
   /**
@@ -29,41 +75,20 @@ const createGameBoard = function (width: number, height: number) {
     y: number,
     direction: Direction
   ) {
-    // Out of bounds error checking
+    const shipLocation = { ship, coords: { x, y }, direction };
 
+    // Out of bounds error checking
     const outOfBoundsErrorMessage = (axis: string) =>
       `Placed ship would be out of bounds on the ${axis}-axis.`;
-    const shipEndCell = (startCell: number, ship: Ship) =>
-      startCell + ship.length - 1;
 
-    if (direction === 'right') {
-      // If 'right':
-      // - x and (x + ship.length - 1) must be in bounds
-      // - y must be in bounds
-      const rightEndCell = shipEndCell(x, ship);
-      if (!inBounds(x, 'horizontal') || !inBounds(rightEndCell, 'horizontal')) {
-        throw new Error(outOfBoundsErrorMessage('x'));
-      }
-
-      if (!inBounds(y, 'vertical')) {
-        throw new Error(outOfBoundsErrorMessage('y'));
-      }
-    } else {
-      // If 'down':
-      // - x must be in bounds
-      // - y and (y + ship.length - 1) must be in bounds
-
-      if (!inBounds(x, 'horizontal')) {
-        throw new Error(outOfBoundsErrorMessage('x'));
-      }
-
-      const downEndCell = shipEndCell(y, ship);
-      if (!inBounds(y, 'vertical') || !inBounds(downEndCell, 'vertical')) {
-        throw new Error(outOfBoundsErrorMessage('y'));
-      }
+    if (!shipInBounds(shipLocation, 'horizontal')) {
+      throw new Error(outOfBoundsErrorMessage('x'));
+    }
+    if (!shipInBounds(shipLocation, 'vertical')) {
+      throw new Error(outOfBoundsErrorMessage('y'));
     }
 
-    ships.push({ ship, coords: { x, y }, direction });
+    ships.push(shipLocation);
   };
 
   return { dimensions: { width, height }, height, ships, placeShip };
