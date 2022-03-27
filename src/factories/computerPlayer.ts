@@ -1,14 +1,17 @@
-import { Coord, GameBoard } from './gameBoard';
+import { GameBoard } from './gameBoard';
+import { Player } from './player';
 
 const computerPlayer = (function () {
-  const previousAttacks: Coord[] = [];
-
-  const possibleAttacks = function (width: number, height: number) {
+  const possibleAttacks = function (
+    this: Player,
+    width: number,
+    height: number
+  ) {
     const attacks = [];
     for (let x = 0; x < width; x++) {
       for (let y = 0; y < height; y++) {
         const attack = { x, y };
-        if (!previousAttacks.includes(attack)) {
+        if (!this.previousAttacks.includes(attack)) {
           attacks.push(attack);
         }
       }
@@ -19,19 +22,26 @@ const computerPlayer = (function () {
   /**
    * Makes a random in-bounds attack that has not already been made.
    */
-  const makeAttack = function (gameBoard: GameBoard) {
-    const attacks = possibleAttacks(
+  const makeAttack = function (
+    this: Player,
+    gameBoard: GameBoard
+  ): [Player, GameBoard] {
+    const attacks = possibleAttacks.call(
+      this,
       gameBoard.dimensions.width,
       gameBoard.dimensions.height
     );
     // Random item from attacks
     const attack = attacks[Math.floor(Math.random() * attacks.length)];
 
-    gameBoard.receiveAttack(attack.x, attack.y);
-    previousAttacks.push(attack);
+    const previousAttacks = [...this.previousAttacks, attack];
+    const player = { ...this, previousAttacks };
+    gameBoard = gameBoard.receiveAttack(attack.x, attack.y);
+
+    return [player, gameBoard];
   };
 
-  return { makeAttack };
+  return { previousAttacks: [], makeAttack };
 })();
 
 export { computerPlayer };

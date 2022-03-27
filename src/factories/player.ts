@@ -1,5 +1,6 @@
-import { GameBoard } from './gameBoard';
+import { Coord, GameBoard } from './gameBoard';
 
 export interface Player {
-  makeAttack(gameBoard: GameBoard): void;
+  previousAttacks: Coord[];
+  makeAttack(gameBoard: GameBoard): [Player, GameBoard];
 }
