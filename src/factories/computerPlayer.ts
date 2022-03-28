@@ -1,12 +1,13 @@
-import { GameBoard } from './gameBoard';
+import { Coord, GameBoard, ShipLocation } from './gameBoard';
 import { Player } from './player';
+import { createShip, Ship } from './ship';
 
-const computerPlayer = (function () {
+const createComputerPlayer = function () {
   const possibleAttacks = function (
     this: Player,
     width: number,
     height: number
-  ) {
+  ): Coord[] {
     const attacks = [];
     for (let x = 0; x < width; x++) {
       for (let y = 0; y < height; y++) {
@@ -17,6 +18,45 @@ const computerPlayer = (function () {
       }
     }
     return attacks;
+  };
+
+  /*
+  const possibleShipPlacements = function (
+    gameBoard: GameBoard,
+    ship: Ship
+  ): ShipLocation[] {
+    const { width, height } = gameBoard.dimensions;
+
+    const placements = [];
+    for (let x = 0; x < width; x++) {
+      for (let y = 0; y < height; y++) {
+        const coords = { x, y };
+        const placementRight: ShipLocation = {
+          ship,
+          coords,
+          direction: 'right',
+        };
+        const placementDown: ShipLocation = { ship, coords, direction: 'down' };
+        if (gameBoard.isPossibleShipPlacement(placementRight)) {
+          placements.push(placementRight);
+        }
+        if (gameBoard.isPossibleShipPlacement(placementDown)) {
+          placements.push(placementDown);
+        }
+      }
+    }
+
+    return placements;
+  };
+  */
+
+  const placeInitialShips = function (gameBoard: GameBoard): GameBoard {
+    return gameBoard
+      .placeShip(createShip(5), 0, 0, 'right')
+      .placeShip(createShip(4), 0, 1, 'right')
+      .placeShip(createShip(3), 0, 2, 'right')
+      .placeShip(createShip(3), 0, 3, 'right')
+      .placeShip(createShip(2), 0, 4, 'right');
   };
 
   /**
@@ -41,7 +81,7 @@ const computerPlayer = (function () {
     return [player, gameBoard];
   };
 
-  return { previousAttacks: [], makeAttack };
-})();
+  return { previousAttacks: [], placeInitialShips, makeAttack };
+};
 
-export { computerPlayer };
+export { createComputerPlayer };

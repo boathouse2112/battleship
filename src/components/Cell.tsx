@@ -1,7 +1,12 @@
 import { MouseEventHandler } from 'react';
 
-function Cell(props: { handleCellClick: MouseEventHandler }) {
-  return <div className="cell" onClick={props.handleCellClick}></div>;
+function Cell(props: {
+  className: string;
+  handleCellClick: MouseEventHandler;
+}) {
+  return (
+    <div className={props.className} onClick={props.handleCellClick}></div>
+  );
 }
 
 export default Cell;
