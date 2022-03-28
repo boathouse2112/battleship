@@ -1,0 +1,27 @@
+.game-board {
+  width: 50vh;
+  height: 50vh;
+  margin-right: 20px;
+  padding: 2px;
+
+  display: grid;
+  grid-template-columns: repeat(7, minmax(10px, 1fr));
+  grid-template-rows: repeat(7, minmax(10px, 1fr));
+  gap: 1px;
+
+  background-color: black;
+}
+
+.cell {
+  background-color: white;
+}
+
+.ship {
+  background-color: cadetblue;
+}
+.no-ship {
+}
+.ship:after {
+}
+.not-attacked {
+}

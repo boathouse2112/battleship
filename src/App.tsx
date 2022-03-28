@@ -22,18 +22,22 @@ function App() {
   });
 
   return (
-    <div>
+    <div className="container">
       <div className="header"></div>
-      <GameBoard
-        width={GAME_BOARD_WIDTH}
-        height={GAME_BOARD_HEIGHT}
-        getCellState={(coord) => playerBoard.getCellState(coord)}
-      />
-      <GameBoard
-        width={GAME_BOARD_WIDTH}
-        height={GAME_BOARD_HEIGHT}
-        getCellState={(coord) => computerBoard.getCellState(coord)}
-      />
+      <div className="player-board">
+        <GameBoard
+          width={GAME_BOARD_WIDTH}
+          height={GAME_BOARD_HEIGHT}
+          getCellState={(coord) => playerBoard.getCellState(coord)}
+        />
+      </div>
+      <div className="computer-board">
+        <GameBoard
+          width={GAME_BOARD_WIDTH}
+          height={GAME_BOARD_HEIGHT}
+          getCellState={(coord) => computerBoard.getCellState(coord)}
+        />
+      </div>
     </div>
   );
 }

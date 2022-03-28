@@ -1,6 +1,6 @@
 import clsx from 'clsx';
-import { useState } from 'react';
-import { CellState, Coord, createGameBoard } from '../factories/gameBoard';
+import { CellState, Coord } from '../factories/gameBoard';
+import './GameBoard.css';
 import Cell from './Cell';
 
 function GameBoard(props: {
@@ -23,7 +23,10 @@ function GameBoard(props: {
           <Cell
             key={`${x}:${y}`}
             className={cellClasses}
-            handleCellClick={() => {}}
+            coord={{ x, y }}
+            handleCellClick={(coord) =>
+              console.log(`Click: {${coord.x}, ${coord.y}}`)
+            }
           />
         );
         cells.push(cell);
